@@ -1,54 +1,109 @@
-# Hello nextjs
+# Hello typescript
 
-Let's get started with the very basics let's create a very basic 'Hello World' sample using next.
+In this example we will add Typescript support to our project, we will start from sample _00-hello-next_.
 
-In this example we will use javascript as base language, in our next sample we will move to typescript.
+At the moment of the writing of this sample Babel 7 was on beta (Babel 7 will have typescript support), we will use
+a plugin based on Babel 7: https://github.com/zeit/next-plugins/tree/master/packages/next-typescript
 
-This sample is quite similar to the basic one pointed in nextjs tutorial: https://nextjs.org/learn/basics/getting-started/setup
+This is the official typescript plugin for next.
 
 # Steps
 
-- Let's create our project (ensure that your folder container does not contain spaces or capital letters).
+- To get started copy the files from sample _00-hello-next_ and execute:
 
 ```bash
-npm init -y
+npm install
 ```
 
-- Let's start by installing some basic packages:
+- Let's install Typescript plus _next-typescript_ plugin.
 
-```bash
-npm install react react-dom next --save
+```
+npm install @zeit/next-typescript --save
 ```
 
-- Let's open _package.json_ and add the following npm script:
+- And the typings.
 
-_package.json_
-
-```diff
-"scripts": {
-- "test": "echo \"Error: no test specified\" && exit 1"
-+ "dev": "next"
-},
+```
+npm install typescript @types/next @types/react --save-dev
 ```
 
-- Let's create our first page (by convention it should fall under the pages subfolder).
+- We need to add a typescript configuration.
 
-_./pages/index.js_
+_./tsconfig.json_
+
+```json
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext",
+    "jsx": "preserve",
+    "allowJs": true,
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "removeComments": false,
+    "preserveConstEnums": true,
+    "sourceMap": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "lib": [
+      "dom",
+      "es2016"
+    ]
+  }
+}
+```
+
+- Next allow us to extend it's default webpack configuration,
+let's create a _next.config.js_ file and include the Typescript configuration.
+
+_./next.config.js_
 
 ```javascript
+const withTypescript = require('@zeit/next-typescript');
+
+module.exports = withTypescript();
+
+```
+
+- Babel needs to be configured to work. We create ./.babelrc in the root folder. In this example, we use this .babelrc:
+
+_[./.babelrc](./.babelrc)_
+
+```json
+{
+  "presets": [
+    "next/babel",
+    "@zeit/next-typescript/babel"
+  ]
+}
+
+```
+
+- Let's rename our _index.js_ to _index.tsx_.
+
+- Let's add some simple typescript code to check that 
+transpilation is working as expected.
+
+```diff 
++ const myLanguage : string = "Typescript";
+
 const Index = () => (
   <div>
     <p>Hello Next.js</p>
++   <p>From {myLanguage}</p>
   </div>
 );
 
 export default Index;
 ```
 
-- Let's run the sample:
+- Let's try the sample
 
 ```bash
 npm run dev
 ```
 
-- Open your web browser and navigate to _http://localhost:3000_
+
+
