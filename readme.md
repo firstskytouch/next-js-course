@@ -1,109 +1,61 @@
-# Hello typescript
+# Navigation
 
-In this example we will add Typescript support to our project, we will start from sample _00-hello-next_.
-
-At the moment of the writing of this sample Babel 7 was on beta (Babel 7 will have typescript support), we will use
-a plugin based on Babel 7: https://github.com/zeit/next-plugins/tree/master/packages/next-typescript
-
-This is the official typescript plugin for next.
+So far we have created a simple porject including a single page, let's create a second page and add navigation between the first
+and the second one.
 
 # Steps
 
-- To get started copy the files from sample _00-hello-next_ and execute:
+- To get started copy the files from sample _01-hello-typescript_ and execute:
 
 ```bash
 npm install
 ```
 
-- Let's install Typescript plus _next-typescript_ plugin.
+- Let's create a page called 'user-info'.
 
-```
-npm install @zeit/next-typescript --save
-```
+_./pages/user-info.tsx_
 
-- And the typings.
+```typescript
+const UserInfoPage = () => (
+  <div>
+    <h2>I'm the user infopage</h2>
+  </div>
+)
 
-```
-npm install typescript @types/next @types/react --save-dev
-```
-
-- We need to add a typescript configuration.
-
-_./tsconfig.json_
-
-```json
-{
-  "compilerOptions": {
-    "target": "esnext",
-    "module": "esnext",
-    "jsx": "preserve",
-    "allowJs": true,
-    "moduleResolution": "node",
-    "allowSyntheticDefaultImports": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "removeComments": false,
-    "preserveConstEnums": true,
-    "sourceMap": true,
-    "skipLibCheck": true,
-    "baseUrl": ".",
-    "lib": [
-      "dom",
-      "es2016"
-    ]
-  }
-}
-```
-
-- Next allow us to extend it's default webpack configuration,
-let's create a _next.config.js_ file and include the Typescript configuration.
-
-_./next.config.js_
-
-```javascript
-const withTypescript = require('@zeit/next-typescript');
-
-module.exports = withTypescript();
+export default UserInfoPage;
 
 ```
 
-- Babel needs to be configured to work. We create ./.babelrc in the root folder. In this example, we use this .babelrc:
+- Now in order to add some useful navigation in both client and server side we can wrap a navigation ancho with a nextjs hoc to handle navigatin in an universal way.
 
-_[./.babelrc](./.babelrc)_
+_./pages/index.tsx_
 
-```json
-{
-  "presets": [
-    "next/babel",
-    "@zeit/next-typescript/babel"
-  ]
-}
+```diff
++ import Link from 'next/link';
 
-```
-
-- Let's rename our _index.js_ to _index.tsx_.
-
-- Let's add some simple typescript code to check that 
-transpilation is working as expected.
-
-```diff 
-+ const myLanguage : string = "Typescript";
+const myLanguage: string = "Typescript";
 
 const Index = () => (
   <div>
     <p>Hello Next.js</p>
-+   <p>From {myLanguage}</p>
+    <p>From {myLanguage}</p>
++   <Link href="/user-info">
++     <a>Navigate to user info page</a>
++   </Link>    
   </div>
 );
 
 export default Index;
 ```
 
-- Let's try the sample
+> If we don't use this _Link_ HOC when clicking on the link it would navigate to the server rather than making client side 
+navigation.
+
+- Let's run the sample:
 
 ```bash
 npm run dev
 ```
 
-
-
+> Now you can notice, navigation is done client side, plus browser history is informed on each navigation.
+> See differences using `a` element.
