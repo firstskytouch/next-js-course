@@ -1,4 +1,5 @@
 import * as Next from 'next';
+import Link from 'next/link';
 import { User } from '../../model/user';
 
 interface Props {
@@ -14,7 +15,9 @@ export const Row: Next.NextStatelessComponent<Props> = (props) => (
       <span>{props.user.id}</span>
     </td>
     <td>
-      <span>{props.user.login}</span>
+      <Link href={`/user-info?login=${props.user.login}`}>
+        <a>{props.user.login}</a>
+      </Link>
     </td>
   </tr>
 )
