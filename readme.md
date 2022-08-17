@@ -1,137 +1,124 @@
-# Friendly URL's
+# Detail page
 
-One of the goals of supporting server side rendering is to obtain good SEO results. One of the basic pilars of SEO consists on generating
-friendly URL's, right now in the user detail page we are generating something like:
+Let's complete the sample by implementing the details page.
 
-http://localhost:3000/user-info?login=brauliodiez
-
-It would be better to rewrite the URL and display it in the following way:
-
-http://localhost:3000/user-info/login/brauliodiez
-
-We will do that in two steps:
-  - Support this friendly url on the client side.
-  - Support this friendly url on the server side.
+This example won't introduce any new concept, just grab the right id from the query string,
+fetch the user detailed data and display it.
 
 # Steps
 
-- Let's start by copying the content of _04-querystring_ in our working folder.
+- We will take as starting point sample _05-friendly-url_.
 
-- Let's install the needed packages.
+- Let's install the dependencies.
 
 ```bash
 npm install
 ```
 
-- Let's update our _row.tsx_ component to use a link alias.
+- Time to create an entity that will hold the user details.
 
-_./pages/components/users/row.tsx_
+_./model/user-detail.ts_
+
+```typescript
+export interface UserDetail {
+  login: string;
+  id: number;
+  avatar_url: string;
+  name: string;
+  company: string;
+  followers: string;
+}
+
+```
+
+- Let's create a new entry on the api to read the details of the selected user from the github api.
+
+_./rest-api/github.ts_
 
 ```diff
-    <td>
--     <Link href={`/user-info?login=${props.user.login}`}>
-+     <Link as={`user-info/login/${props.user.login}`} href={`/user-info?login=${props.user.login}`}>
-        <a>{props.user.login}</a>
-      </Link>    
-    </td>
-...
+import { User } from '../model/user';
++ import { UserDetail } from '../model/user-detail';
+import fetch from 'isomorphic-unfetch';
+
+- const baseRoot = 'https://api.github.com/orgs/lemoncode';
++ const baseRoot = 'https://api.github.com';
+- const userCollectionURL = `${baseRoot}/members`
++ const userCollectionURL = `${baseRoot}/orgs/lemoncode/members`;
++ const userDetailURL = `${baseRoot}/users`;
+
+export const fetchUsers = async () => {
+  const res = await fetch(userCollectionURL)
+  const data = await res.json();
+
+  return data.map(
+    ({ id, login, avatar_url, }) => ({ id, login, avatar_url, } as User)
+  );
+}
+
++ export const fetchUserDetail = async (user: string): Promise<UserDetail> => {
++   const res = await fetch(`${userDetailURL}/${user}`);
++   const { id, login, avatar_url, name, company, followers } = await res.json();
+
++   return {
++     id,
++     login,
++     avatar_url,
++     name,
++     company,
++     followers,
++   };
++ };
 
 ```
 
-- Let's run the sample and check how it works:
+- Now that we have the data loaded is time to display it on the component, we will just implement something very simple.
 
-```bash
-npm run dev
-```
-
-- Are we ready? The answer is no, if we click on refresh it won't perform the server side rendering properly (we get a 404).
-
-- To get the server behaving in the same way as the client we need to do some extra plumbing.
-
-- Let's install _express_
-
-```bash
-npm install express --save
-```
-
-- Let's create a file called _server.js_ 
-
-_./server.js_
-
-```javascript
-const express = require('express');
-const next = require('next');
-
-const dev = process.env.NODE_ENV !== 'production';
-const app = next({ dev });
-const handler = app.getRequestHandler();
-
-app
-  .prepare()
-  .then(() => {
-    const server = express();
-
-    server.get('*', (req, res) => {
-      return handler(req, res);
-    });
-
-    server.listen(3000, err => {
-      if (err) throw err;
-      console.log('> Ready on http://localhost:3000');
-    });
-  })
-  .catch(ex => {
-    console.error(ex.stack);
-    process.exit(1);
-  });
-
-```
-
-> in this file we just create a next app and listen to any request, this request will just be handled by the next app.
-
-- Let's update our _package.json_ entry.
-
-_./package.json_
+_./pages/user-info.tsx_
 
 ```diff
-  "scripts": {
--    "dev": "next"
-+    "dev": "node server.js"
-  },
+- import { withRouter } from 'next/router';
++ import * as Next from 'next';
++ import { fetchUserDetail } from '../rest-api/github';
++ import { UserDetail } from '../model/user-detail';
+
+- const UserInfoPage = withRouter((props) => (
+-   <div>
+-     <h2>I'm the user infopage</h2>
+-     <h3>{props.router.query.login}</h3>
+-   </div>
+- ));
+
++ interface Props {
++   login: string;
++   userDetail: UserDetail;
++ }
+
++ const UserInfoPage: Next.NextStatelessComponent<Props> = props => (
++   <div>
++     <h2>I'm the user infopage</h2>
++     <p>User ID: {props.userDetail.id}</p>
++     <img src={props.userDetail.avatar_url} style={{ maxWidth: '10rem' }} />
++     <p>User name: {props.login}</p>
++     <p>Company: {props.userDetail.company}</p>
++     <p>Followers: {props.userDetail.followers}</p>
++   </div>
++ );
+
++ UserInfoPage.getInitialProps = async props => {
++   const login = props.query.login as string;
++   const userDetail = await fetchUserDetail(login);
+
++   return {
++     login,
++     userDetail,
++   };
++ };
+
+export default UserInfoPage;
+
 ```
 
-- Let's double check that the server is working (no server side clean url yet).
-
-```bash
-npm run dev
-```
-
-- Now let's add a get case for the new friendly url we have created.
-
-_./server.js_
-
-```diff
-...
-
-app
-  .prepare()
-  .then(() => {
-    const server = express();
-
-+   server.get('/user-info/login/:login', (req, res) => {
-+     return app.render(req, res, '/user-info', { login: req.params.login });
-+   });
-
-    server.get('*', (req, res) => {
-      return handler(req, res);
-    });
-...
-
-```
-
-> NOTE: Important, you have to declare this route before `*`.
-
-- If we run the code now, we're going to get the right behavior after we refresh the page.
+- Let's give a try:
 
 ```bash
 npm run dev
