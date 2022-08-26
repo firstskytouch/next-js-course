@@ -1,10 +1,10 @@
-# Serverless
+# CSS in JS
 
-In this example we are going to add necessary config for create a serverless app.
+In this example we are going to add necessary config for create an app with css-in-js.
 
 # Steps
 
-- Let's start by copying the content of _07-styles_ in our working folder.
+- Let's start by copying the content of _08-serverless_ in our working folder.
 
 - Let's install the needed packages.
 
@@ -12,66 +12,69 @@ In this example we are going to add necessary config for create a serverless app
 npm install
 ```
 
-- Create a new repository in [github](https://github.com) or [gitlab](https://gitlab.com).
+- In order to get ready with `emotion` we will install:
 
-- Create a free account in [zeit.co/now](https://zeit.co/now).
+```bash
+npm install @emotion/core @emotion/styled babel-plugin-emotion --save 
+```
 
-- Upload our app to repository.
+- Configure `babel-plugin-emotion`:
 
-- In order to enable `serverless` mode, we need to update our `next.config.js` file:
-
-_./next.config.js_
+_./.babelrc_
 
 ```diff
-const withTypescript = require('@zeit/next-typescript');
-const withCSS = require('@zeit/next-css');
+{
+  "presets": [
+    "next/babel",
+    "@zeit/next-typescript/babel"
+- ]
++ ],
++ "plugins": [
++   "emotion"
++ ]
+}
 
-module.exports = withTypescript(
-  withCSS({
-    cssModules: true,
-    cssLoaderOptions: {
-      camelCase: true,
-      importLoaders: 1,
-      localIdentName: '[local]___[hash:base64:5]',
-    },
-+   target: 'serverless',
-  })
+```
+
+- And that is, we will update our components. Rename `header.css` by `header.styles.tsx`:
+
+_./components/users/header.styles.tsx_
+
+```diff
++ import styled from '@emotion/styled';
+
+- .purple-box {
++ export const Avatar = styled.th`
+    border: 2px dotted purple;
+- }
++ `;
+
+- .blue-box {
++ export const Id = styled.th`
+    border: 3px solid blue;
+- }
++ `;
+
+```
+
+- Update `header` component:
+
+_./components/users/header.tsx_
+
+```diff
+- const styles = require('./header.css');
++ import * as s from './header.styles';
+
+export const Header = () => (
+  <tr>
+-   <th className={styles.blueBox}>Avatar</th>
++   <s.Avatar>Avatar</s.Avatar>
+-   <th className={styles.purpleBox}>Id</th>
++   <s.Id>Id</s.Id>
+    <th>Name</th>
+  </tr>
 );
 
 ```
 
-- Add `now` configuration file, [more docs](https://zeit.co/docs/v2/deployments/configuration):
-
-_./now.json_
-
-```json
-{
-  "version": 2,
-  "name": "test-now-deploy",
-  "builds": [{ "src": "next.config.js", "use": "@now/next" }]
-}
-
-```
-
-- Git commit to repository.
-
-- Now, our app was deployed at `https://test-now-deploy-59lyhaf1v.now.sh/` or similar url.
-
-- Notice that it's not working the `friendly-url` due to we are not using `server.js` file when build app. We need to configure `now.json` to resolve routes:
-
-_./now.json_
-
-```diff
-{
-  "version": 2,
-  "name": "test-now-deploy",
-- "builds": [{ "src": "next.config.js", "use": "@now/next" }]
-+ "builds": [{ "src": "next.config.js", "use": "@now/next" }],
-+ "routes": [{ "src": "/user-info/login/(?<login>[^/]+)", "dest": "/user-info?login=$login" }]
-}
-
-```
-
-> NOTE: Previous configuration only works for `now` cloud, not in local mode.
-
-- Commit changes to repository and it will be auto deployed to `now` cloud.
+> NOTE: we could load detail page as first page and then navigate to main page without any issue.
