@@ -1,10 +1,10 @@
-# CSS in JS
+# Production mode
 
-In this example we are going to add necessary config for create an app with css-in-js.
+In this example we are going to add necessary config for create an app in prod mode.
 
 # Steps
 
-- Let's start by copying the content of _08-serverless_ in our working folder.
+- Let's start by copying the content of _09-css-in-js_ in our working folder.
 
 - Let's install the needed packages.
 
@@ -12,69 +12,62 @@ In this example we are going to add necessary config for create an app with css-
 npm install
 ```
 
-- In order to get ready with `emotion` we will install:
+- Add build step:
+
+### ./package.json
+
+```diff
+...
+ "scripts": {
+    "dev": "node server.js"
++   "dev": "node server.js",
++   "build": "next build"
+  }, 
+```
+
+- Install `dotenv`:
 
 ```bash
-npm install @emotion/core @emotion/styled babel-plugin-emotion --save 
+npm install dotenv --save
 ```
 
-- Configure `babel-plugin-emotion`:
+- Add `.env` file:
 
-_./.babelrc_
+### ./.env
+
+```
+NODE_ENV=production
+```
+
+- Update `server`:
+
+### ./server.js
 
 ```diff
-{
-  "presets": [
-    "next/babel",
-    "@zeit/next-typescript/babel"
-- ]
-+ ],
-+ "plugins": [
-+   "emotion"
-+ ]
-}
-
+const express = require('express');
+const next = require('next');
++ require('dotenv').config();
 ```
 
-- And that is, we will update our components. Rename `header.css` by `header.styles.tsx`:
+- Update npm script:
 
-_./components/users/header.styles.tsx_
+### ./package.json
 
 ```diff
-+ import styled from '@emotion/styled';
-
-- .purple-box {
-+ export const Avatar = styled.th`
-    border: 2px dotted purple;
-- }
-+ `;
-
-- .blue-box {
-+ export const Id = styled.th`
-    border: 3px solid blue;
-- }
-+ `;
-
+...
+ "scripts": {
+-   "dev": "node server.js",
++   "start": "node server.js",
+    "build": "next build"
+  }, 
 ```
 
-- Update `header` component:
+- Update to `target: server`:
 
-_./components/users/header.tsx_
+### ./next.config.js
 
 ```diff
-- const styles = require('./header.css');
-+ import * as s from './header.styles';
-
-export const Header = () => (
-  <tr>
--   <th className={styles.blueBox}>Avatar</th>
-+   <s.Avatar>Avatar</s.Avatar>
--   <th className={styles.purpleBox}>Id</th>
-+   <s.Id>Id</s.Id>
-    <th>Name</th>
-  </tr>
-);
-
+...
+-   target: 'serverless',
++   target: 'server',
 ```
-
-> NOTE: we could load detail page as first page and then navigate to main page without any issue.
